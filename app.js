@@ -1,6 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectToDb } from "./utils/database.js";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
+import userRoutes from "./routes/user.js";
 
 dotenv.config();
 
@@ -9,6 +12,11 @@ const app = express();
 //Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users",  userRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 3500;
 
