@@ -1,7 +1,8 @@
 import express from "express";
+import { signInController } from "../controllers/adminController.js";
 
 const router = express.Router();
 
 router.post("/sign-in", signInController);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,9 @@
 import express from "express";
+import { signUpController } from "../controllers/authController.js";
+import { signInController } from "../controllers/adminController.js";
+import { forgotPasswordController } from "../controllers/authController.js";
+import { restorePasswordController } from "../controllers/authController.js";
+import { resetPasswordController } from "../controllers/authController.js";
 
 const router = express.Router();
 
@@ -8,4 +13,4 @@ router.post("/forgot-password", forgotPasswordController);
 router.post("/restore-password", restorePasswordController);
 router.post("/reset-password", resetPasswordController);
 
-module.exports = router;
+export default router;

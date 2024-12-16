@@ -1,4 +1,8 @@
 import express from "express";
+import { profileController } from "../controllers/userController.js";
+import { depositController } from "../controllers/userController.js";
+import { withdrawalController } from "../controllers/userController.js";
+import { supportController } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -8,6 +12,6 @@ router.get("/withdrawal", withdrawalController);
 router.post("/profile", profileController);
 router.post("/deposit", depositController);
 router.post("/withdrawal", withdrawalController);
-router.post("/support", Controller);
+router.post("/support", supportController);
 
-modules.export = router;
+export default router;
