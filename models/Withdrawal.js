@@ -1,4 +1,6 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose from "mongoose";
+
+const { Schema, model, models } = mongoose;
 
 const withdrawalSchema = new Schema(
   {
