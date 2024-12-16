@@ -44,7 +44,7 @@ const generateUniqueResetToken = async () => {
 
 export const signUpController = async (req, res) => {
   try {
-    const processedData = await req.body();
+    const processedData = await req.body;
 
     if (!processedData || !processedData.email) {
       return res.status(400).json({ message: "Invalid request data" });
@@ -62,23 +62,26 @@ export const signUpController = async (req, res) => {
     // Convert email, username, and fullName to lowercase
     const normalizedEmail = email.toLowerCase();
     const normalizedUsername = username.toLowerCase();
-    const normalizedFullName = fullName.toLowerCase();
 
-    // Check if the email already exists
-    const existingUserByEmail = await User.findOne({ email: normalizedEmail });
+    // Check for existing users
+    const [existingUserByEmail, existingUserByUsername] = await Promise.all([
+      User.findOne({ email: normalizedEmail }),
+      User.findOne({ username: normalizedUsername }),
+    ]);
 
     if (existingUserByEmail) {
-      return res.status(400).json({
-        message: "User with this email already exists, please sign in",
-      });
+      return res
+        .status(400)
+        .json({
+          message: "User with this email already exists, please sign in",
+        });
     }
-
-    // Check if the username already exists
-    const existingUserByUsername = await User.findOne({ username });
     if (existingUserByUsername) {
-      return res.status(400).json({
-        message: "Username already exists, please choose a different one",
-      });
+      return res
+        .status(400)
+        .json({
+          message: "Username already exists, please choose a different one",
+        });
     }
 
     try {
@@ -97,7 +100,7 @@ export const signUpController = async (req, res) => {
         email: normalizedEmail,
         username: normalizedUsername,
         password: hashedPassword,
-        fullName: normalizedFullName,
+        fullName,
         nationality,
         referralCode: userReferralCode,
         referredByCode: referralCode,
