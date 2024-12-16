@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendWelcomeEmail } from "../services/sendWelcomeEmail.js";
+import { signUpSchema } from "../utils/validatorSchema.js";
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -47,6 +48,12 @@ export const signUpController = async (req, res) => {
 
     if (!processedData || !processedData.email) {
       return res.status(400).json({ message: "Invalid request data" });
+    }
+
+    // Validate the incoming data
+    const { error, value } = signUpSchema.validate(processedData);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
     }
 
     const { username, email, password, fullName, nationality, referralCode } =
