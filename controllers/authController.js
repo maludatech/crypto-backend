@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
 import { signUpSchema } from '../utils/validatorSchema.js';
+import { signInSchema } from '../utils/signInSchema.js';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -136,6 +137,37 @@ export const signInController = async (req, res) => {
   const normalizedData = await req.body;
   const { email, password } = normalizedData;
   try {
+    const existingUser = await User.findOne({ email: email });
+
+    if (!existingUser) {
+      return res.status(401).json({ message: 'Invalid email' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, existingUser.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+    // Include the createdAt field in the response
+    const registrationDate = existingUser.createdAt;
+
+    const secretKey = process.env.SECRET_KEY;
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: existingUser._id,
+        email: existingUser.email,
+        username: existingUser.username,
+        fullName: existingUser.fullName,
+        nationality: existingUser.nationality,
+        referralCode: existingUser.referralCode,
+      },
+      secretKey,
+      { expiresIn: '3d' }
+    );
+
+    return res.status(200).json({ token, registrationDate });
   } catch (error) {
     console.error('Error during sign-in:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
