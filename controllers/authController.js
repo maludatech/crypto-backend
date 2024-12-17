@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
 import { signUpSchema } from '../utils/validatorSchema.js';
-import { signInSchema } from '../utils/signInSchema.js';
+import { signInSchema } from '../utils/validatorSchema.js';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -134,9 +134,17 @@ export const signUpController = async (req, res) => {
 };
 
 export const signInController = async (req, res) => {
-  const normalizedData = await req.body;
-  const { email, password } = normalizedData;
   try {
+    const normalizedData = await req.body;
+
+    // Validate the incoming data
+    const { error, value } = signInSchema.validate(normalizedData);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { email, password } = normalizedData;
+
     const existingUser = await User.findOne({ email: email });
 
     if (!existingUser) {
