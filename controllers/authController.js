@@ -1,19 +1,20 @@
-import User from "../models/User.js";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
-import { sendWelcomeEmail } from "../services/sendWelcomeEmail.js";
-import { signUpSchema } from "../utils/validatorSchema.js";
+import User from '../models/User.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
+import { signUpSchema } from '../utils/validatorSchema.js';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
   const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const generatedCodes = new Set();
 
   for (let attempts = 0; attempts < 10; attempts++) {
     let code = Array.from({ length }, () =>
       characters.charAt(Math.floor(Math.random() * characters.length))
-    ).join("");
+    ).join('');
 
     if (!generatedCodes.has(code)) {
       const existingUser = await User.findOne({ referralCode: code });
@@ -24,12 +25,12 @@ async function generateUniqueReferralCode(length) {
     }
   }
   throw new Error(
-    "Failed to generate a unique referral code after 10 attempts"
+    'Failed to generate a unique referral code after 10 attempts'
   );
 }
 
 const generateUniqueResetToken = async () => {
-  const generateToken = () => crypto.randomBytes(3).toString("hex").slice(0, 6);
+  const generateToken = () => crypto.randomBytes(3).toString('hex').slice(0, 6);
 
   let resetToken;
   let existingUser;
@@ -47,7 +48,7 @@ export const signUpController = async (req, res) => {
     const processedData = await req.body;
 
     if (!processedData || !processedData.email) {
-      return res.status(400).json({ message: "Invalid request data" });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
 
     // Validate the incoming data
@@ -70,18 +71,14 @@ export const signUpController = async (req, res) => {
     ]);
 
     if (existingUserByEmail) {
-      return res
-        .status(400)
-        .json({
-          message: "User with this email already exists, please sign in",
-        });
+      return res.status(400).json({
+        message: 'User with this email already exists, please sign in',
+      });
     }
     if (existingUserByUsername) {
-      return res
-        .status(400)
-        .json({
-          message: "Username already exists, please choose a different one",
-        });
+      return res.status(400).json({
+        message: 'Username already exists, please choose a different one',
+      });
     }
 
     try {
@@ -117,28 +114,36 @@ export const signUpController = async (req, res) => {
 
       // Return success response
       return res.status(201).json({
-        message: "User created successfully",
+        message: 'User created successfully',
       });
     } catch (error) {
-      console.error("Error creating user or sending email:", error.message);
+      console.error('Error creating user or sending email:', error.message);
       return new Response(
-        JSON.stringify({ error: "Failed to create user or send email" }),
+        JSON.stringify({ error: 'Failed to create user or send email' }),
         { status: 500 }
       );
     }
   } catch (error) {
     console.error(
-      "Error during signup:",
-      error.message || "Internal Server Error"
+      'Error during signup:',
+      error.message || 'Internal Server Error'
     );
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 
-export const signInController = async () => {};
+export const signInController = async (req, res) => {
+  const normalizedData = await req.body;
+  const { email, password } = normalizedData;
+  try {
+  } catch (error) {
+    console.error('Error during sign-in:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
-export const forgotPasswordController = async () => {};
+export const forgotPasswordController = async (req, res) => {};
 
-export const restorePasswordController = async () => {};
+export const restorePasswordController = async (req, res) => {};
 
-export const resetPasswordController = async () => {};
+export const resetPasswordController = async (req, res) => {};
