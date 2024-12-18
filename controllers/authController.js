@@ -227,7 +227,7 @@ export const forgotPasswordController = async (req, res) => {
 
     try {
       await user.save();
-      await sendForgotPasswordEmail(user, resetToken);
+      await sendForgotPasswordEmail({ user, resetToken });
     } catch (emailError) {
       console.error('Error sending password reset email:', emailError);
       res.status(400).json({ message: 'Internal Server Error' });
