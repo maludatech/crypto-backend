@@ -1,8 +1,11 @@
-import express from "express";
-import { signInController } from "../controllers/adminController.js";
+import express from 'express';
+import requireAdminAuth from '../middleware/requireAdminAuth.js';
+import { sendEmailController } from '../controllers/adminController.js';
 
 const router = express.Router();
 
-router.post("/sign-in", signInController);
+router.use(requireAdminAuth);
+
+router.post('/send-email', sendEmailController);
 
 export default router;

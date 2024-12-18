@@ -4,10 +4,10 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
 import { sendForgotPasswordEmail } from '../services/sendForgotPasswordEmail.js';
+import { sendResetPasswordEmail } from '../services/sendResetPasswordEmail.js';
 import { signUpSchema } from '../utils/validatorSchema.js';
 import { signInSchema } from '../utils/validatorSchema.js';
 import { forgetPasswordSchema } from '../utils/validatorSchema.js';
-import { sendResetPasswordEmail } from '../services/sendResetPasswordEmail.js';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
