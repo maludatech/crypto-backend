@@ -7,6 +7,8 @@ import { sendForgotPasswordEmail } from '../services/sendForgotPasswordEmail.js'
 import { signUpSchema } from '../utils/validatorSchema.js';
 import { signInSchema } from '../utils/validatorSchema.js';
 import { forgetPasswordSchema } from '../utils/validatorSchema.js';
+import { sendResetPasswordEmail } from '../services/sendResetPasswordEmail.js';
+import { response } from 'express';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -243,6 +245,75 @@ export const forgotPasswordController = async (req, res) => {
   }
 };
 
-export const restorePasswordController = async (req, res) => {};
+export const restorePasswordController = async (req, res) => {
+  try {
+    const { code } = req.body;
 
-export const resetPasswordController = async (req, res) => {};
+    if (!code) {
+      return res.status(400).json({
+        message: 'Code is required',
+      });
+    }
+
+    const user = await User.findOne({ resetToken: code });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Code incorrect' });
+    }
+
+    return res.status(200).json({ message: 'Code correct', userId: user._id });
+  } catch (error) {
+    console.error('Error resolving code: ', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const resetPasswordController = async (req, res) => {
+  try {
+    const data = await req.json();
+    const { userId, newPassword } = data;
+
+    if (!userId || !newPassword) {
+      return res.status(400).json({
+        message: 'UserId and newPassword is required',
+      });
+    }
+
+    //Fetch the user's current password hash from the database
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare the new password with the current password
+    const isMatch = await bcrypt.compare(newPassword, user.password);
+    if (isMatch) {
+      return res.status(400).json({ message: 'Old password cannot be used' });
+    }
+
+    // Hash the new password and update the user's password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.updateOne(
+      { _id: userId },
+      { password: hashedPassword, resetToken: null }
+    );
+
+    try {
+      await sendResetPasswordEmail(user);
+    } catch (error) {
+      console.error('Error sending reset password email: ', error);
+      return response.status(400).json({ message: 'Internal Server Error' });
+    }
+
+    return res
+      .status(200)
+      .json({
+        message: 'Password updated successfully',
+        email: user.email,
+        username: user.username,
+      });
+  } catch (error) {
+    console.error('Error updating password: ', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

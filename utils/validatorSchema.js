@@ -1,4 +1,4 @@
-import Joi from "joi";
+import Joi from 'joi';
 
 export const signUpSchema = Joi.object({
   username: Joi.string()
@@ -7,7 +7,7 @@ export const signUpSchema = Joi.object({
     .min(3)
     .max(15)
     .required()
-    .messages({ "string.base": "Username must be a string." }),
+    .messages({ 'string.base': 'Username must be a string.' }),
   email: Joi.string().email().required().trim(),
   password: Joi.string().min(8).max(15).required().trim(),
   fullName: Joi.string()
@@ -15,10 +15,10 @@ export const signUpSchema = Joi.object({
     .regex(/^[a-zA-Z\s]+$/)
     .required()
     .messages({
-      "string.pattern.base": "Full name must only contain letters and spaces.",
+      'string.pattern.base': 'Full name must only contain letters and spaces.',
     }),
   nationality: Joi.string().trim().required(),
-  referralCode: Joi.string().optional().allow("").trim(),
+  referralCode: Joi.string().optional().allow('').trim(),
 });
 
 export const signInSchema = Joi.object({
@@ -27,15 +27,11 @@ export const signInSchema = Joi.object({
     .required()
     .min(8)
     .max(15)
-    .messages({ "string.max": "Password cannot exceed 15 characters." }),
+    .messages({ 'string.max': 'Password cannot exceed 15 characters.' }),
 });
 
 export const forgetPasswordSchema = Joi.object({
   email: Joi.string().email().required().trim(),
-});
-
-export const resetPasswordSchema = Joi.object({
-  password: Joi.string().min(8).max(15).required(),
 });
 
 export const supportEmailSchema = Joi.object({
@@ -43,12 +39,12 @@ export const supportEmailSchema = Joi.object({
     .trim()
     .max(50)
     .required()
-    .messages({ "string.max": "Subject cannot exceed 50 characters." }),
+    .messages({ 'string.max': 'Subject cannot exceed 50 characters.' }),
   message: Joi.string()
     .trim()
     .max(1000)
     .required()
-    .messages({ "string.max": "Message cannot exceed 1000 characters." }),
+    .messages({ 'string.max': 'Message cannot exceed 1000 characters.' }),
 });
 
 export const depositSchema = Joi.object({
@@ -57,9 +53,9 @@ export const depositSchema = Joi.object({
   dailyReturn: Joi.number().positive().required(),
   startDate: Joi.date().required(),
   endDate: Joi.date()
-    .greater(Joi.ref("startDate"))
+    .greater(Joi.ref('startDate'))
     .required()
-    .messages({ "date.greater": "End date must be greater than start date." }),
+    .messages({ 'date.greater': 'End date must be greater than start date.' }),
 });
 
 export const withdrawalSchema = Joi.object({
@@ -67,10 +63,10 @@ export const withdrawalSchema = Joi.object({
   walletAddress: Joi.string()
     .trim()
     .required()
-    .messages({ "string.base": "Wallet address must be a valid string." }),
+    .messages({ 'string.base': 'Wallet address must be a valid string.' }),
   coin: Joi.string()
     .trim()
-    .valid("BTC", "ETH", "USDT")
+    .valid('BTC', 'ETH', 'USDT')
     .required()
-    .messages({ "any.only": "Coin must be one of 'BTC', 'ETH', or 'USDT'." }),
+    .messages({ 'any.only': "Coin must be one of 'BTC', 'ETH', or 'USDT'." }),
 });
