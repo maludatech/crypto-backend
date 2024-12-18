@@ -3,8 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
+import { sendForgotPasswordEmail } from '../services/sendForgotPasswordEmail.js';
 import { signUpSchema } from '../utils/validatorSchema.js';
 import { signInSchema } from '../utils/validatorSchema.js';
+import { forgetPasswordSchema } from '../utils/validatorSchema.js';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -46,20 +48,23 @@ const generateUniqueResetToken = async () => {
 
 export const signUpController = async (req, res) => {
   try {
-    const processedData = await req.body;
+    const processedData = req.body;
 
     if (!processedData || !processedData.email) {
       return res.status(400).json({ message: 'Invalid request data' });
     }
 
     // Validate the incoming data
-    const { error, value } = signUpSchema.validate(processedData);
+    const { error, value } = signUpSchema.validate(processedData, {
+      stripUnknown: true,
+    });
+
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
     const { username, email, password, fullName, nationality, referralCode } =
-      processedData;
+      value;
 
     // Convert email, username, and fullName to lowercase
     const normalizedEmail = email.toLowerCase();
@@ -135,15 +140,17 @@ export const signUpController = async (req, res) => {
 
 export const signInController = async (req, res) => {
   try {
-    const normalizedData = await req.body;
+    const normalizedData = req.body;
 
     // Validate the incoming data
-    const { error, value } = signInSchema.validate(normalizedData);
+    const { error, value } = signInSchema.validate(normalizedData, {
+      stripUnknown: true,
+    });
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { email, password } = normalizedData;
+    const { email, password } = value;
 
     const existingUser = await User.findOne({ email: email });
 
@@ -160,6 +167,11 @@ export const signInController = async (req, res) => {
     const registrationDate = existingUser.createdAt;
 
     const secretKey = process.env.SECRET_KEY;
+
+    if (!secretKey) {
+      console.error('SECRET_KEY is missing from environment variables.');
+      return res.status(500).json({ message: 'Internal Server Error' });
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -182,7 +194,54 @@ export const signInController = async (req, res) => {
   }
 };
 
-export const forgotPasswordController = async (req, res) => {};
+export const forgotPasswordController = async (req, res) => {
+  try {
+    const data = req.body;
+
+    const { error, value } = forgetPasswordSchema.validate(data, {
+      stripUnknown: true,
+    });
+
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { email } = value;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message:
+          'If this email is registered, a password reset link will be sent.',
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(3).toString('hex').slice(0, 6);
+    const resetTokenExpiry = Date.now() + 30 * 60 * 1000; // 30 minutes
+
+    // Save token and expiry to user
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+
+    try {
+      await user.save();
+      await sendForgotPasswordEmail(user, resetToken);
+    } catch (emailError) {
+      console.error('Error sending password reset email:', emailError);
+      res.status(400).json({ message: 'Internal Server Error' });
+    }
+
+    return res.status(200).json({
+      message:
+        'If this email is registered, a password reset link will be sent.',
+    });
+  } catch (error) {
+    console.error('Error getting email', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 export const restorePasswordController = async (req, res) => {};
 
