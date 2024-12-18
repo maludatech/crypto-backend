@@ -1,14 +1,13 @@
-import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import User from '../models/User.js';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
 import { sendForgotPasswordEmail } from '../services/sendForgotPasswordEmail.js';
 import { signUpSchema } from '../utils/validatorSchema.js';
 import { signInSchema } from '../utils/validatorSchema.js';
 import { forgetPasswordSchema } from '../utils/validatorSchema.js';
 import { sendResetPasswordEmail } from '../services/sendResetPasswordEmail.js';
-import { response } from 'express';
 
 // Function to generate a unique referral code
 async function generateUniqueReferralCode(length) {
@@ -126,10 +125,9 @@ export const signUpController = async (req, res) => {
       });
     } catch (error) {
       console.error('Error creating user or sending email:', error.message);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create user or send email' }),
-        { status: 500 }
-      );
+      return res
+        .status(500)
+        .json({ message: 'Failed to create user or send email' });
     }
   } catch (error) {
     console.error(
@@ -302,7 +300,7 @@ export const resetPasswordController = async (req, res) => {
       await sendResetPasswordEmail(user);
     } catch (error) {
       console.error('Error sending reset password email: ', error);
-      return response.status(400).json({ message: 'Internal Server Error' });
+      return res.status(400).json({ message: 'Internal Server Error' });
     }
 
     return res.status(200).json({
