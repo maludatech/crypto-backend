@@ -1,9 +1,17 @@
-import User from '../models/User.js';
 import nodemailer from 'nodemailer';
+import User from '../models/User.js';
+import { sendEmailSchema } from '../utils/validatorSchema.js';
 
 export const sendEmailController = async (req, res) => {
-  const data = await req.body;
-  const { subject, heading, Message } = data;
+  const data = req.body;
+
+  const { error, value } = sendEmailSchema.validate(data);
+
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const { subject, heading, Message } = value;
 
   try {
     // Fetch all users from the database
@@ -51,14 +59,9 @@ export const sendEmailController = async (req, res) => {
     }
 
     // Return success response
-    return new Response(
-      JSON.stringify({ message: 'Emails sent successfully!' }),
-      { status: 200 }
-    );
+    return res.status(200).json({ message: 'Emails sent successfully!' });
   } catch (error) {
     console.error('Error sending email', error);
-    return new Response(JSON.stringify({ message: 'Error sending emails!' }), {
-      status: 500,
-    });
+    return res.status(500).json({ message: 'Error sending emails!' });
   }
 };

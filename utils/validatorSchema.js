@@ -47,6 +47,20 @@ export const supportEmailSchema = Joi.object({
     .messages({ 'string.max': 'Message cannot exceed 1000 characters.' }),
 });
 
+export const sendEmailSchema = Joi.object({
+  heading: Joi.string().trim().required(),
+  subject: Joi.string()
+    .trim()
+    .max(50)
+    .required()
+    .messages({ 'string.max': 'Subject cannot exceed 50 characters.' }),
+  message: Joi.string()
+    .trim()
+    .max(1000)
+    .required()
+    .messages({ 'string.max': 'Message cannot exceed 1000 characters.' }),
+});
+
 export const depositSchema = Joi.object({
   pendingDeposit: Joi.number().positive().required(),
   investmentPlan: Joi.string().trim().required(),
