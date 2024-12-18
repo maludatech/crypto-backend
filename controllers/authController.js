@@ -270,7 +270,7 @@ export const restorePasswordController = async (req, res) => {
 
 export const resetPasswordController = async (req, res) => {
   try {
-    const data = await req.json();
+    const data = req.body;
     const { userId, newPassword } = data;
 
     if (!userId || !newPassword) {
@@ -305,13 +305,9 @@ export const resetPasswordController = async (req, res) => {
       return response.status(400).json({ message: 'Internal Server Error' });
     }
 
-    return res
-      .status(200)
-      .json({
-        message: 'Password updated successfully',
-        email: user.email,
-        username: user.username,
-      });
+    return res.status(200).json({
+      message: 'Password updated successfully',
+    });
   } catch (error) {
     console.error('Error updating password: ', error);
     return res.status(500).json({ message: 'Internal server error' });
