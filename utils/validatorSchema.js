@@ -67,6 +67,11 @@ export const changePasswordSchema = Joi.object({
   newPassword: Joi.string().min(8).max(15).required(),
 });
 
+export const profileUpdateSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(8).max(15).required(),
+});
+
 export const depositSchema = Joi.object({
   pendingDeposit: Joi.number().positive().required(),
   investmentPlan: Joi.string().trim().required(),
