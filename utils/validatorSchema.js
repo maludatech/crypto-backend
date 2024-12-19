@@ -54,7 +54,7 @@ export const sendEmailSchema = Joi.object({
     .max(50)
     .required()
     .messages({ 'string.max': 'Subject cannot exceed 50 characters.' }),
-  message: Joi.string()
+  Message: Joi.string()
     .trim()
     .max(1000)
     .required()
