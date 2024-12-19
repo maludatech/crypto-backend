@@ -42,7 +42,7 @@ export const sendEmailController = async (req, res) => {
     });
 
     // Prepare email sending promises
-    const emailPromises = users.map((user) => {
+    const emailPromises = users.map(async (user) => {
       const MailOptions = {
         from: 'CryptFX Plc',
         to: user.email,
