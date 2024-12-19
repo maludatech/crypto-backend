@@ -1,6 +1,51 @@
 import nodemailer from 'nodemailer';
+import Admin from '../models/Admin.js';
 import User from '../models/User.js';
 import { sendEmailSchema } from '../utils/validatorSchema.js';
+import { changePasswordSchema } from '../utils/validatorSchema.js';
+
+export const changePasswordController = async (req, res) => {
+  try {
+    const formData = req.body;
+
+    const { error, value } = changePasswordSchema.validate(formData);
+
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { email, oldPassword, newPassword } = value;
+
+    // Retrieve the admin's document from the database
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Compare the provided old password with the stored hashed password
+    const isPasswordMatch = await bcrypt.compare(oldPassword, admin.password);
+
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: 'Incorrect old password' });
+    }
+
+    // Hash and salt the new password
+    admin.password = await bcrypt.hash(newPassword, 10);
+
+    // Save the updated password
+    await admin.save();
+
+    // Respond with success message and token
+    return res
+      .status(200)
+      .json({ message: 'Admin profile updated successfully' });
+  } catch (error) {
+    // Handle errors
+    console.error('Error during Admin profile update', error);
+    return res.status(500).json({ message: 'Error Updating Admin Profile' });
+  }
+};
 
 export const sendEmailController = async (req, res) => {
   const data = req.body;
