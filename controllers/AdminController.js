@@ -6,7 +6,20 @@ import Withdrawal from '../models/Withdrawal.js';
 import { sendEmailSchema } from '../utils/validatorSchema.js';
 import { changePasswordSchema } from '../utils/validatorSchema.js';
 
-export const getUserDetailsController = async (req, res) => {};
+export const userDetailsController = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    return res.status(500).json({ message: 'Error fetching user details' });
+  }
+};
 
 export const getUsersDetailsController = async (req, res) => {
   try {
@@ -148,5 +161,39 @@ export const sendEmailController = async (req, res) => {
   } catch (error) {
     console.error('Error sending emails:', error);
     return res.status(500).json({ message: 'Error sending emails!' });
+  }
+};
+
+export const deleteUserController = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Delete the user
+    const deleteUser = await User.findByIdAndDelete(userId);
+
+    if (!deleteUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userDeposits = await Deposit.find({ investor: userId });
+    const userWithdrawals = await Withdrawal.find({ investor: userId });
+
+    if (userDeposits.length > 0) {
+      await Deposit.deleteMany({ investor: userId });
+    }
+
+    if (userWithdrawals.length > 0) {
+      await Withdrawal.deleteMany({ investor: userId });
+    }
+
+    return res.status(200).json({
+      message: `User ${deleteUser.email} and their related data were deleted successfully.`,
+    });
+  } catch (error) {
+    console.error('Error deleting user and related data:', error);
+
+    return res
+      .status(500)
+      .json({ message: 'Error deleting user and related data' });
   }
 };
