@@ -1,8 +1,29 @@
 import nodemailer from 'nodemailer';
 import Admin from '../models/Admin.js';
 import User from '../models/User.js';
+import Deposit from '../models/Deposit.js';
+import Withdrawal from '../models/Withdrawal.js';
 import { sendEmailSchema } from '../utils/validatorSchema.js';
 import { changePasswordSchema } from '../utils/validatorSchema.js';
+
+export const getUserDetailsController = async (req, res) => {};
+
+export const getUsersDetailsController = async (req, res) => {
+  try {
+    const { timestamp } = req.params;
+    const users = await User.find();
+    const deposits = await Deposit.find();
+    const withdrawals = await Withdrawal.find();
+
+    return res.status(200).json({ users, deposits, withdrawals });
+  } catch (error) {
+    console.log(
+      'Error while fetching data',
+      error.message || 'Internal Server Error'
+    );
+    return response.status(500).json({ message: 'Internal Server Error' });
+  }
+};
 
 export const changePasswordController = async (req, res) => {
   try {
