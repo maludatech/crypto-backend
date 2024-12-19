@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
+import Deposit from '../models/Deposit.js';
+import Withdrawal from '../models/Withdrawal.js';
 import { sendWelcomeEmail } from '../services/sendWelcomeEmail.js';
 import { sendForgotPasswordEmail } from '../services/sendForgotPasswordEmail.js';
 import { sendResetPasswordEmail } from '../services/sendResetPasswordEmail.js';
