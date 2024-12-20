@@ -62,7 +62,31 @@ export const profileController = async (req, res) => {
 };
 
 export const referralController = async (req, res) => {
-  const { userId } = req.params.id;
+  try {
+    const userId = req.params.id;
+
+    // Step 1: Find the user by userId to get the referralCode
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const referralCode = user.referralCode;
+
+    if (!referralCode) {
+      return res.status(400).json({ message: 'Referral code is missing' });
+    }
+
+    // Step 2: Find all users who have this referralCode in their referredByCode
+    const referrals = await User.find({ referredByCode: referralCode });
+
+    // Step 3: Return the total number of referrals
+    return res.status(200).json({ totalReferral: referrals.length });
+  } catch (error) {
+    console.error('Error fetching referral details', error);
+    return res.status(500).json({ message: 'Error fetching referral details' });
+  }
 };
 
 export const depositController = async (req, res) => {};
