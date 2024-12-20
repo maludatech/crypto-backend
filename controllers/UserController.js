@@ -61,7 +61,9 @@ export const profileController = async (req, res) => {
   }
 };
 
-export const referralController = async (req, res) => {};
+export const referralController = async (req, res) => {
+  const { userId } = req.params.id;
+};
 
 export const depositController = async (req, res) => {};
 
