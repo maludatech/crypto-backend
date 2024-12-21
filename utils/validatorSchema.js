@@ -89,7 +89,7 @@ export const withdrawalSchema = Joi.object({
     .trim()
     .required()
     .messages({ 'string.base': 'Wallet address must be a valid string.' }),
-  coin: Joi.string()
+  selectedCoin: Joi.string()
     .trim()
     .valid('BTC', 'ETH', 'USDT')
     .required()

@@ -11,11 +11,11 @@ const router = express.Router();
 router.use(requireUserAuth); //we use it at the beginning because we want to protect our other CRUD methods, the next function in the requireAuth will fire the next method after token verification is completed
 
 router.get('/referral/:id', referralController);
-router.get('/deposit', depositController);
-router.get('/withdrawal', withdrawalController);
+router.get('/deposit/:id', depositController);
+router.get('/withdrawal/:id', withdrawalController);
 router.post('/profile-update', profileController);
-router.post('/deposit', depositController);
-router.post('/withdrawal', withdrawalController);
+router.post('/deposit/:id', depositController);
+router.post('/withdrawal/:id', withdrawalController);
 router.post('/support/:id', supportController);
 
 export default router;
