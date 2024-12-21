@@ -4,11 +4,16 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Deposit from '../models/Deposit.js';
 import Withdrawal from '../models/Withdrawal.js';
-import { profileUpdateSchema } from '../utils/validatorSchema.js';
+import {
+  depositSchema,
+  profileUpdateSchema,
+} from '../utils/validatorSchema.js';
 import { supportEmailSchema } from '../utils/validatorSchema.js';
 import { withdrawalSchema } from '../utils/validatorSchema.js';
 import { sendSupportEmail } from '../services/sendSupportEmail.js';
 import { sendWithdrawalEmailConfirmation } from '../services/sendWithdrawalConfirmation.js';
+import { response } from 'express';
+import { sendDepositConfirmationEmail } from '../services/sendDepositConfirmationEmail.js';
 
 export const profileController = async (req, res) => {
   try {
@@ -99,7 +104,71 @@ export const referralController = async (req, res) => {
   }
 };
 
-export const depositController = async (req, res) => {};
+export const depositController = async (req, res) => {
+  const userId = req.params.id;
+
+  // Validate userId format
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: 'Invalid user ID' });
+  }
+
+  const { error, value } = depositSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({ message: error.details[0].message });
+  }
+
+  const {
+    pendingDeposit,
+    selectedCoin,
+    selectedPlan,
+    dailyReturn,
+    startDate,
+    endDate,
+  } = value;
+
+  try {
+    // Fetch user details from the database
+    const user = await User.findById(userId); // Assuming you have a User model
+
+    if (!user) {
+      return response.status(404).json({ message: 'User not found' });
+    }
+
+    const updatedDeposit = await Deposit.findOneAndUpdate(
+      { investor: userId },
+      {
+        pendingDeposit: pendingDeposit,
+        plan: selectedPlan,
+        dailyReturn: dailyReturn,
+        startDate: startDate,
+        endDate: endDate,
+      },
+      { new: true }
+    );
+
+    if (!updatedDeposit) {
+      return res.status(404).json({ message: 'Deposit details not found' });
+    }
+
+    try {
+      await sendDepositConfirmationEmail({
+        user,
+        pendingDeposit,
+        selectedCoin,
+        selectedPlan,
+      });
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      return res.status(500).json({ message: 'Email notification failed' });
+    }
+
+    // Return success message with the updated user
+    return res.status(200).json({ message: 'Deposit updated successfully!!' });
+  } catch (error) {
+    console.error('Error updating user deposit details', error);
+    return res.status(500).json({ message: 'Error updating deposit details!' });
+  }
+};
 
 export const withdrawalController = async (req, res) => {
   try {

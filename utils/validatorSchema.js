@@ -74,7 +74,12 @@ export const profileUpdateSchema = Joi.object({
 
 export const depositSchema = Joi.object({
   pendingDeposit: Joi.number().positive().required(),
-  investmentPlan: Joi.string().trim().required(),
+  selectedPlan: Joi.string().trim().required(),
+  selectedCoin: Joi.string()
+    .trim()
+    .valid('BTC', 'ETH', 'USDT')
+    .required()
+    .messages({ 'any.only': "Coin must be one of 'BTC', 'ETH', or 'USDT'." }),
   dailyReturn: Joi.number().positive().required(),
   startDate: Joi.date().required(),
   endDate: Joi.date()
