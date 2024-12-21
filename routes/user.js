@@ -16,6 +16,6 @@ router.get('/withdrawal', withdrawalController);
 router.post('/profile-update', profileController);
 router.post('/deposit', depositController);
 router.post('/withdrawal', withdrawalController);
-router.post('/support', supportController);
+router.post('/support/:id', supportController);
 
 export default router;
