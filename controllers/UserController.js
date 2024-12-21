@@ -6,6 +6,7 @@ import Deposit from '../models/Deposit.js';
 import Withdrawal from '../models/Withdrawal.js';
 import { profileUpdateSchema } from '../utils/validatorSchema.js';
 import { supportEmailSchema } from '../utils/validatorSchema.js';
+import { withdrawalSchema } from '../utils/validatorSchema.js';
 import { sendSupportEmail } from '../services/sendSupportEmail.js';
 
 export const profileController = async (req, res) => {
@@ -99,7 +100,129 @@ export const referralController = async (req, res) => {
 
 export const depositController = async (req, res) => {};
 
-export const withdrawalController = async (req, res) => {};
+export const withdrawalController = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const { error, value } = withdrawalSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { pendingWithdrawal, selectedCoin, walletAddress } = value;
+
+    // Fetch user details from the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return new Response(JSON.stringify({ message: 'User not found' }), {
+        status: 404,
+      });
+    }
+
+    const updatedWithdrawal = await Withdrawal.findOneAndUpdate(
+      { investor: userId },
+      { pendingWithdrawal: pendingWithdrawal },
+      { new: true }
+    );
+
+    if (!updatedWithdrawal) {
+      return new Response(
+        JSON.stringify({ message: 'Withdrawal details not found' }),
+        { status: 404 }
+      );
+    }
+
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: process.env.GMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    // Email to the user
+    const userWithdrawalMailOptions = {
+      from: 'CryptFX Plc',
+      to: user.email, // Using the user's email
+      subject: '💸 Withdrawal Confirmation',
+      html: `
+                      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                          <div style="text-align: center;">
+                              <img src="https://res.cloudinary.com/dlnvweuhv/image/upload/v1727444766/square-pied-piper-brands-solid_hq1w5z.png" alt="CryptFX Logo" style="width: 80px; height: 80px; margin-bottom: 20px;" />
+                          </div>
+                          <p style="color: #333; font-size: 18px; font-weight: bold;">Hello ${user.username},</p>
+                          <p style="color: #555; font-size: 16px; font-weight: bold;">Withdrawal Confirmation</p>
+                          <p style="color: #555; font-size: 16px; padding: 12px; border-left: 4px solid #d0d0d0";>
+                              Your withdrawal request of <span style="font-weight: bold;">${pendingWithdrawal} USD</span> is under confirmation and will be processed shortly.
+                          </p>
+                          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                          <p style="color: #555; font-size: 14px; text-align: center;">
+                              Thank you for using <span style="color: #B197FC; font-weight: bold;">CryptFX</span>.<br>
+                              <strong>Best wishes,</strong><br>
+                              CryptFX Plc
+                          </p>
+                      </div>
+              `,
+    };
+
+    // Email to the admin
+    const adminWithdrawalMailOptions = {
+      from: 'CryptFX Plc',
+      to: 'cryptfxinvestmentplc@gmail.com',
+      subject: '💸 New Withdrawal Notification',
+      html: `
+                      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                          <div style="text-align: center;">
+                              <img src="https://res.cloudinary.com/dlnvweuhv/image/upload/v1727444766/square-pied-piper-brands-solid_hq1w5z.png" alt="CryptFX Logo" style="width: 80px; height: 80px; margin-bottom: 20px;" />
+                          </div>
+                          <p style="color: #333; font-size: 18px; font-weight: bold;">Hello Admin,</p>
+                          <p style="color: #555; font-size: 16px; font-weight: bold;">Withdrawal Confirmation</p>
+                          <p style="color: #555; font-size: 16px; padding: 12px; border-left: 4px solid #d0d0d0";>
+                              ${user.username} of ${user.email} has just requested a withdrawal of <span style="font-weight: bold;">${pendingWithdrawal} USD</span> in ${selectedCoin} to this address: ${walletAddress}.
+                              <br/>
+                              <br>
+                              Please confirm this withdrawal and process it so that ${user.username} will be notified.
+                          </p>
+                          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                          <p style="color: #555; font-size: 14px; text-align: center;">
+                              Thank you for using <span style="color: #B197FC; font-weight: bold;">CryptFX</span>.<br>
+                              <strong>Best wishes,</strong><br>
+                              CryptFX Plc
+                          </p>
+                      </div>
+              `,
+    };
+
+    // Send emails
+    await transporter.sendMail(userWithdrawalMailOptions);
+    await transporter.sendMail(adminWithdrawalMailOptions);
+
+    // Return success message with the updated withdrawal details
+    return new Response(
+      JSON.stringify({
+        message: 'Withdrawal updated successfully!!',
+        updatedWithdrawal: updatedWithdrawal,
+      }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error updating user withdrawal details:', error);
+    return new Response(
+      JSON.stringify({ message: 'Error updating user withdrawal details!' }),
+      { status: 500 }
+    );
+  }
+};
 
 export const supportController = async (req, res) => {
   try {
