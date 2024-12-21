@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Deposit from '../models/Deposit.js';
 import Withdrawal from '../models/Withdrawal.js';
@@ -67,6 +68,11 @@ export const referralController = async (req, res) => {
   try {
     const userId = req.params.id;
 
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
     // Step 1: Find the user by userId to get the referralCode
     const user = await User.findById(userId);
 
@@ -99,9 +105,14 @@ export const supportController = async (req, res) => {
   try {
     const userId = req.params.id;
 
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
     const { error, value } = supportEmailSchema.validate(req.body);
     if (error) {
-      res.status(400).json({ message: error.details[0].message });
+      return res.status(400).json({ message: error.details[0].message });
     }
 
     const { subject, message } = value;
@@ -113,9 +124,7 @@ export const supportController = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    try {
-      sendSupportEmail(user);
-    } catch (error) {}
+    await sendSupportEmail({ user, subject, message });
 
     // Return success message
     return res.status(200).json({ message: 'Email sent successfully!' });

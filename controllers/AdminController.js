@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import Admin from '../models/Admin.js';
 import User from '../models/User.js';
 import Deposit from '../models/Deposit.js';
@@ -10,6 +11,11 @@ import { changePasswordSchema } from '../utils/validatorSchema.js';
 export const userDetailsController = async (req, res) => {
   try {
     const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -168,6 +174,11 @@ export const sendEmailController = async (req, res) => {
 export const deleteUserController = async (req, res) => {
   try {
     const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
 
     // Delete the user
     const deleteUser = await User.findByIdAndDelete(userId);

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import Deposit from '../models/Deposit.js';
@@ -277,6 +278,11 @@ export const resetPasswordController = async (req, res) => {
       return res.status(400).json({
         message: 'UserId and newPassword is required',
       });
+    }
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
 
     //Fetch the user's current password hash from the database
