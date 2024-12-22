@@ -4,11 +4,11 @@ import {
   getDepositController,
   getWithdrawalController,
   profileController,
+  depositController,
+  withdrawalController,
+  supportController,
+  referralController,
 } from '../controllers/userController.js';
-import { depositController } from '../controllers/userController.js';
-import { withdrawalController } from '../controllers/userController.js';
-import { supportController } from '../controllers/userController.js';
-import { referralController } from '../controllers/userController.js';
 
 const router = express.Router();
 
