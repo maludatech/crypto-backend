@@ -1,6 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { connectToDb } from './utils/database.js';
+import cron from 'node-cron';
+import { updateProfit } from './controllers/userController.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import adminAuthRoutes from './routes/adminAuth.js';
@@ -23,6 +25,17 @@ app.use('/api/admin', adminRoutes);
 const PORT = process.env.PORT || 3500;
 
 connectToDb();
+
+// Schedule the task to run every day at midnight (server time)
+cron.schedule('0 0 * * *', async () => {
+  console.log('Running daily profit update task...');
+  try {
+    const result = await updateProfit();
+    console.log(result);
+  } catch (error) {
+    console.error('Error during daily profit update task:', error.message);
+  }
+});
 
 app.listen(PORT, (req, res) => {
   console.log(`listening on port ${PORT}`);

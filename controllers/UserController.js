@@ -310,3 +310,60 @@ export const getWithdrawalController = async (req, res) => {
       .json({ message: 'Error fetching user withdrawal details' });
   }
 };
+
+export const updateProfit = async () => {
+  try {
+    const today = new Date();
+
+    const activeDeposits = await Deposit.find({
+      $or: [
+        { endDate: { $gt: today }, isActive: true }, // Active deposits
+        { endDate: { $lte: today }, isActive: true }, // Completed but not updated
+      ],
+    });
+
+    if (!activeDeposits.length) {
+      console.log('No deposits to update.');
+      return 'No deposits to update.';
+    }
+
+    const updatePromises = activeDeposits.map(async (deposit) => {
+      if (new Date(deposit.endDate).getTime() <= today.getTime()) {
+        const updatedBalance = deposit.balance + (deposit.totalReturn || 0);
+
+        await Deposit.findByIdAndUpdate(deposit._id, {
+          balance: updatedBalance,
+          activeDeposit: 0,
+          isActive: false,
+          startDate: null,
+          endDate: null,
+          plan: 'none',
+          totalReturn: 0,
+        });
+
+        console.log(`Deposit ${deposit._id} has been marked as completed.`);
+      } else {
+        const dailyReturn = deposit.dailyReturn;
+        const updatedReturn = (deposit.totalReturn || 0) + dailyReturn;
+
+        await Deposit.findByIdAndUpdate(deposit._id, {
+          totalReturn: updatedReturn,
+        });
+
+        console.log(`Profit updated for active deposit ${deposit._id}.`);
+      }
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log('Deposits processed successfully!');
+    return 'Deposits processed successfully!';
+  } catch (error) {
+    console.error('Error updating deposits:', error);
+    throw new Error('Error updating deposits!');
+  }
+};
+
+export const updateDeposit = async (req, res) => {};
+
+export const updateWithdrawal = async (req, res) => {};
