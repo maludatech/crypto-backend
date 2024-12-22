@@ -1,9 +1,11 @@
 import express from 'express';
-import { signUpController } from '../controllers/authController.js';
-import { signInController } from '../controllers/authController.js';
-import { forgotPasswordController } from '../controllers/authController.js';
-import { restorePasswordController } from '../controllers/authController.js';
-import { resetPasswordController } from '../controllers/authController.js';
+import {
+  signUpController,
+  signInController,
+  forgotPasswordController,
+  restorePasswordController,
+  resetPasswordController,
+} from '../controllers/authController.js';
 
 const router = express.Router();
 
