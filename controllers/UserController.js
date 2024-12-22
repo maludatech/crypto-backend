@@ -7,12 +7,11 @@ import Withdrawal from '../models/Withdrawal.js';
 import {
   depositSchema,
   profileUpdateSchema,
+  supportEmailSchema,
+  withdrawalSchema,
 } from '../utils/validatorSchema.js';
-import { supportEmailSchema } from '../utils/validatorSchema.js';
-import { withdrawalSchema } from '../utils/validatorSchema.js';
 import { sendSupportEmail } from '../services/sendSupportEmail.js';
 import { sendWithdrawalEmailConfirmation } from '../services/sendWithdrawalConfirmation.js';
-import { response } from 'express';
 import { sendDepositConfirmationEmail } from '../services/sendDepositConfirmationEmail.js';
 
 export const profileController = async (req, res) => {
