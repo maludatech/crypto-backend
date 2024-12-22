@@ -130,7 +130,7 @@ export const depositController = async (req, res) => {
     const user = await User.findById(userId); // Assuming you have a User model
 
     if (!user) {
-      return response.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const updatedDeposit = await Deposit.findOneAndUpdate(
