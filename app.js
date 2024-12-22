@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { connectToDb } from './utils/database.js';
 import cron from 'node-cron';
-import { updateProfit } from './controllers/userController.js';
+import { updateDeposit, updateProfit } from './controllers/userController.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import adminAuthRoutes from './routes/adminAuth.js';
@@ -36,6 +36,9 @@ cron.schedule('0 0 * * *', async () => {
     console.error('Error during daily profit update task:', error.message);
   }
 });
+
+// Run the function every 30 minutes using cron
+cron.schedule('*/30 * * * *', updateDeposit);
 
 app.listen(PORT, (req, res) => {
   console.log(`listening on port ${PORT}`);

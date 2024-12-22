@@ -364,6 +364,95 @@ export const updateProfit = async () => {
   }
 };
 
-export const updateDeposit = async (req, res) => {};
+export const updateDeposit = async (req, res) => {
+  try {
+    await connectToDb();
+
+    // Fetch all deposits with pendingDeposit > 0
+    const deposits = await Deposit.find({ pendingDeposit: { $gt: 0 } });
+
+    if (!deposits.length) {
+      console.log('No deposits with pendingDeposit found.');
+      return;
+    }
+
+    const updatePromises = deposits.map(async (deposit) => {
+      const { investor, pendingDeposit, balance } = deposit;
+
+      // Calculate new balance and other fields
+      const updatedBalance = balance + pendingDeposit;
+
+      // Update the deposit record
+      const updatedDeposit = await Deposit.findByIdAndUpdate(
+        deposit._id,
+        {
+          pendingDeposit: 0,
+          balance: updatedBalance,
+          lastDeposit: pendingDeposit,
+          isActive: true,
+        },
+        { new: true } // Return the updated document
+      );
+
+      if (!updatedDeposit) {
+        console.log(`Failed to update deposit for user ${investor}`);
+        return;
+      }
+
+      // Fetch the user details for email
+      const user = await User.findById(investor);
+      if (!user) {
+        console.log(`User not found for deposit ${deposit._id}`);
+        return;
+      }
+
+      // Configure Nodemailer for email sending
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: process.env.GMAIL,
+          pass: process.env.PASSWORD,
+        },
+      });
+
+      // Email to the user about deposit update
+      const userDepositMailOptions = {
+        from: 'CryptFx Plc',
+        to: user.email,
+        subject: '💰 Deposit Approval',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+              <div style="text-align: center;">
+                  <img src="https://res.cloudinary.com/dlnvweuhv/image/upload/v1727444766/square-pied-piper-brands-solid_hq1w5z.png" alt="CryptFX Logo" style="width: 80px; height: 80px; margin-bottom: 20px;" />
+              </div>
+              <p style="color: #333; font-size: 18px; font-weight: bold;"> Hello ${user.username}, </p>
+              <p style="color: #555; font-size: 16px; font-weight: bold;"> Deposit Approval </p>
+              <p style="color: #555; font-size: 16px; padding: 12px; border-left: 4px solid #d0d0d0;">
+                  Your deposit of <span style="font-weight: bold;">${pendingDeposit} USD</span> has been approved and your dashboard has been updated successfully.
+              </p> 
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="color: #555; font-size: 14px; text-align: center;">
+                Thank you for using <span style="color: #B197FC; font-weight: bold;">CryptFX</span>.<br>
+                <strong>Best wishes,</strong><br>
+                CryptFX Plc
+              </p>
+          </div>
+        `,
+      };
+
+      await transporter.sendMail(userDepositMailOptions);
+      console.log(`Deposit for user ${user.username} updated and email sent.`);
+    });
+
+    // Wait for all update operations to complete
+    await Promise.all(updatePromises);
+
+    console.log('All pending deposits processed successfully!');
+  } catch (error) {
+    console.error('Error updating pending deposits:', error);
+  }
+};
 
 export const updateWithdrawal = async (req, res) => {};
