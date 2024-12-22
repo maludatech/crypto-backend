@@ -114,7 +114,7 @@ export const depositController = async (req, res) => {
 
   const { error, value } = depositSchema.validate(req.body);
   if (error) {
-    res.status(400).json({ message: error.details[0].message });
+    return res.status(400).json({ message: error.details[0].message });
   }
 
   const {
