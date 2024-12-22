@@ -262,3 +262,52 @@ export const supportController = async (req, res) => {
     return res.status(500).json({ message: 'Error sending email!' });
   }
 };
+
+export const getDepositController = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const deposit = await Deposit.findOne({ investor: userId });
+
+    if (!deposit) {
+      console.error('User deposit details not found');
+      return res.status(404).json({ message: 'Deposits not found' });
+    }
+
+    return res.status(200).json(deposit);
+  } catch (error) {
+    console.error('Error fetching user deposit details', error);
+    return res
+      .status(500)
+      .json({ message: 'Error fetching user deposit details' });
+  }
+};
+
+export const getWithdrawalController = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const withdrawal = await Withdrawal.findOne({ investor: userId });
+
+    if (!withdrawal) {
+      console.error('User withdrawal details not found');
+      return res.status(404).json({ message: 'Withdrawals not found' });
+    }
+    return res.status(200).json(withdrawal);
+  } catch (error) {
+    console.error('Error fetching user withdrawal details', error);
+    return res
+      .status(500)
+      .json({ message: 'Error fetching user withdrawal details' });
+  }
+};
