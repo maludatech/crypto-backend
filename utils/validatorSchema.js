@@ -73,7 +73,7 @@ export const profileUpdateSchema = Joi.object({
 });
 
 export const depositSchema = Joi.object({
-  pendingDeposit: Joi.number().positive().required(),
+  pendingDeposit: Joi.number().min(0).required(),
   selectedPlan: Joi.string().trim().required(),
   selectedCoin: Joi.string()
     .trim()
@@ -89,7 +89,7 @@ export const depositSchema = Joi.object({
 });
 
 export const withdrawalSchema = Joi.object({
-  pendingWithdrawal: Joi.number().positive().required(),
+  pendingWithdrawal: Joi.number().min(0).required(),
   walletAddress: Joi.string()
     .trim()
     .required()
@@ -102,14 +102,14 @@ export const withdrawalSchema = Joi.object({
 });
 
 export const patchDepositSchema = Joi.object({
-  pendingDeposit: Joi.number().positive().required(),
-  lastDeposit: Joi.number().positive().required(),
-  balance: Joi.number().positive().required(),
-  activeDeposit: Joi.number().positive().required(),
+  pendingDeposit: Joi.number().min(0).required(),
+  lastDeposit: Joi.number().min(0).required(),
+  balance: Joi.number().min(0).required(),
+  activeDeposit: Joi.number().min(0).required(),
 });
 
 export const patchWithdrawalSchema = Joi.object({
-  lastWithdrawal: Joi.number().positive().required(),
-  pendingWithdrawal: Joi.number().positive().required(),
-  withdrawalAmount: Joi.number().positive().required(),
+  lastWithdrawal: Joi.number().min(0).required(),
+  pendingWithdrawal: Joi.number().min(0).required(),
+  withdrawalAmount: Joi.number().min(0).required(),
 });
