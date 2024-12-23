@@ -6,6 +6,8 @@ import Deposit from '../models/Deposit.js';
 import Withdrawal from '../models/Withdrawal.js';
 import {
   depositSchema,
+  patchDepositSchema,
+  patchWithdrawalSchema,
   profileUpdateSchema,
   supportEmailSchema,
   withdrawalSchema,
@@ -321,43 +323,76 @@ export const patchDeposit = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
-    const { activeDeposit, lastDeposit, balance, pendingDeposit } = req.body;
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return new Response(JSON.stringify({ message: 'User not found' }), {
-        status: 404,
-      });
+    const { error, value } = patchDepositSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
     }
 
+    const { activeDeposit, lastDeposit, balance, pendingDeposit } = value;
+
+    // Update deposit details
     const updatedDeposit = await Deposit.findOneAndUpdate(
       { investor: userId },
       { pendingDeposit, activeDeposit, lastDeposit, balance, isActive: true },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedDeposit) {
-      return new Response(
-        JSON.stringify({ message: 'Deposit details not found' }),
-        { status: 404 }
-      );
+      return res
+        .status(404)
+        .json({ message: 'Deposit details or User not found' });
     }
 
     // Return success message with the updated deposit
-    return new Response(
-      JSON.stringify({
-        message: 'Deposit updated successfully!!',
-        updatedDeposit,
-      }),
-      { status: 200 }
-    );
+    return res
+      .status(200)
+      .json({ message: 'Deposit updated successfully!!', updatedDeposit });
   } catch (error) {
     console.error('Error updating user deposit details', error);
-    return new Response(
-      JSON.stringify({ message: 'Error updating user deposit details!' }),
-      { status: 500 }
+    return res
+      .status(500)
+      .json({ message: 'Error updating user deposit details!' });
+  }
+};
+
+export const patchWithdrawal = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const { error, value } = patchWithdrawalSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { withdrawalAmount, pendingWithdrawal, lastWithdrawal } = value;
+
+    const updatedWithdrawal = await Withdrawal.findOneAndUpdate(
+      { investor: userId },
+      { pendingWithdrawal, withdrawalAmount, lastWithdrawal },
+      { new: true }
     );
+
+    if (!updatedWithdrawal) {
+      return res
+        .status(404)
+        .json({ message: 'Withdrawal details or User not found' });
+    }
+
+    // Return success message with the updated withdrawal
+    return res.status(200).json({
+      message: 'Withdrawal updated successfully!!',
+      updatedWithdrawal,
+    });
+  } catch (error) {
+    console.error('Error updating user withdrawal details:', error);
+    return res
+      .status(500)
+      .json({ message: 'Error updating user withdrawal details!' });
   }
 };
 

@@ -100,3 +100,16 @@ export const withdrawalSchema = Joi.object({
     .required()
     .messages({ 'any.only': "Coin must be one of 'BTC', 'ETH', or 'USDT'." }),
 });
+
+export const patchDepositSchema = Joi.object({
+  pendingDeposit: Joi.number().positive().required(),
+  lastDeposit: Joi.number().positive().required(),
+  balance: Joi.number().positive().required(),
+  activeDeposit: Joi.number().positive().required(),
+});
+
+export const patchWithdrawalSchema = Joi.object({
+  lastWithdrawal: Joi.number().positive().required(),
+  pendingWithdrawal: Joi.number().positive().required(),
+  withdrawalAmount: Joi.number().positive().required(),
+});
