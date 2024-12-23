@@ -452,8 +452,6 @@ export const updateProfit = async () => {
 
 export const updateDeposit = async (req, res) => {
   try {
-    await connectToDb();
-
     // Fetch all deposits with pendingDeposit > 0
     const deposits = await Deposit.find({ pendingDeposit: { $gt: 0 } });
 
@@ -541,4 +539,88 @@ export const updateDeposit = async (req, res) => {
   }
 };
 
-export const updateWithdrawal = async (req, res) => {};
+export const updateWithdrawal = async (req, res) => {
+  try {
+    // Fetch all withdrawals with pendingWithdrawal > 0
+    const pendingWithdrawals = await Withdrawal.find({
+      pendingWithdrawal: { $gt: 0 },
+    });
+
+    if (pendingWithdrawals.length === 0) {
+      console.log('No pending withdrawals to process.');
+      return;
+    }
+
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: process.env.GMAIL,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    for (const withdrawal of pendingWithdrawals) {
+      const { investor, pendingWithdrawal } = withdrawal;
+
+      // Fetch user details
+      const user = await User.findById(investor);
+      if (!user) {
+        console.error(`User with ID ${investor} not found.`);
+        continue;
+      }
+
+      // Update withdrawal details
+      const updatedWithdrawal = await Withdrawal.findOneAndUpdate(
+        { investor },
+        {
+          $set: {
+            lastWithdrawal: pendingWithdrawal,
+            withdrawalAmount: withdrawal.withdrawalAmount + pendingWithdrawal,
+            pendingWithdrawal: 0,
+          },
+        },
+        { new: true }
+      );
+
+      if (!updatedWithdrawal) {
+        console.error(`Failed to update withdrawal for user ${user.username}`);
+        continue;
+      }
+
+      // Email to the user
+      const userWithdrawalMailOptions = {
+        from: 'CryptFX Plc',
+        to: user.email,
+        subject: '💸 Withdrawal Approval',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+              <div style="text-align: center;">
+                  <img src="https://res.cloudinary.com/dlnvweuhv/image/upload/v1727444766/square-pied-piper-brands-solid_hq1w5z.png" alt="CryptFX Logo" style="width: 80px; height: 80px; margin-bottom: 20px;" />
+              </div>
+              <p style="color: #333; font-size: 18px; font-weight: bold;"> Hello ${user.username}, </p>
+              <p style="color: #555; font-size: 16px; font-weight: bold;"> Withdrawal Approval </p>
+              <p style="color: #555; font-size: 16px; padding: 12px; border-left: 4px solid #d0d0d0;">
+                  Your withdrawal of ${pendingWithdrawal} USD has been approved and your dashboard has been updated successfully. Your wallet will be credited in 30 minutes.
+              </p> 
+              <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+              <p style="color: #555; font-size: 14px; text-align: center;">
+                Thank you for using <span style="color: #B197FC; font-weight: bold;">CryptFX</span>.<br>
+                <strong>Best wishes,</strong><br>
+                CryptFX Plc
+              </p>
+          </div>
+        `,
+      };
+
+      await transporter.sendMail(userWithdrawalMailOptions);
+      console.log(`Email sent to ${user.email} for approved withdrawal.`);
+    }
+
+    console.log('Pending withdrawals processed successfully.');
+  } catch (error) {
+    console.error('Error processing pending withdrawals:', error);
+  }
+};

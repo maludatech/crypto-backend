@@ -2,7 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { connectToDb } from './utils/database.js';
 import cron from 'node-cron';
-import { updateDeposit, updateProfit } from './controllers/userController.js';
+import {
+  updateDeposit,
+  updateProfit,
+  updateWithdrawal,
+} from './controllers/userController.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import adminAuthRoutes from './routes/adminAuth.js';
@@ -45,6 +49,16 @@ cron.schedule('*/30 * * * *', async () => {
     console.log('Deposit update task completed successfully.');
   } catch (error) {
     console.error('Error during deposit update task:', error.message);
+  }
+});
+
+cron.schedule('*/30 * * * *', async () => {
+  console.log('Running withdrawal update task...');
+  try {
+    await updateWithdrawal();
+    console.log('Withdrawal update task completed successfully.');
+  } catch (error) {
+    console.error('Error during withdrawal update task:', error.message);
   }
 });
 
