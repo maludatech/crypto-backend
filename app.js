@@ -22,7 +22,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/auth/admin', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 
-const PORT = process.env.PORT || 3500;
+const PORT = process.env.PORT || 3600;
 
 connectToDb();
 
@@ -38,8 +38,16 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 // Run the function every 30 minutes using cron
-cron.schedule('*/30 * * * *', updateDeposit);
+cron.schedule('*/30 * * * *', async () => {
+  console.log('Running deposit update task...');
+  try {
+    await updateDeposit();
+    console.log('Deposit update task completed successfully.');
+  } catch (error) {
+    console.error('Error during deposit update task:', error.message);
+  }
+});
 
-app.listen(PORT, (req, res) => {
+app.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
 });

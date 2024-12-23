@@ -311,6 +311,57 @@ export const getWithdrawalController = async (req, res) => {
   }
 };
 
+//Admin Update Deposit and withdrawal
+export const patchDeposit = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Validate userId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const { activeDeposit, lastDeposit, balance, pendingDeposit } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return new Response(JSON.stringify({ message: 'User not found' }), {
+        status: 404,
+      });
+    }
+
+    const updatedDeposit = await Deposit.findOneAndUpdate(
+      { investor: userId },
+      { pendingDeposit, activeDeposit, lastDeposit, balance, isActive: true },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedDeposit) {
+      return new Response(
+        JSON.stringify({ message: 'Deposit details not found' }),
+        { status: 404 }
+      );
+    }
+
+    // Return success message with the updated deposit
+    return new Response(
+      JSON.stringify({
+        message: 'Deposit updated successfully!!',
+        updatedDeposit,
+      }),
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error updating user deposit details', error);
+    return new Response(
+      JSON.stringify({ message: 'Error updating user deposit details!' }),
+      { status: 500 }
+    );
+  }
+};
+
+//Cron Functions
 export const updateProfit = async () => {
   try {
     const today = new Date();
