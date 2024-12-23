@@ -314,7 +314,7 @@ export const getWithdrawalController = async (req, res) => {
 };
 
 //Admin Update Deposit and withdrawal
-export const patchDeposit = async (req, res) => {
+export const patchDepositController = async (req, res) => {
   try {
     const userId = req.params.id;
 
@@ -355,7 +355,7 @@ export const patchDeposit = async (req, res) => {
   }
 };
 
-export const patchWithdrawal = async (req, res) => {
+export const patchWithdrawalController = async (req, res) => {
   try {
     const userId = req.params.id;
 
